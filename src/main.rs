@@ -14,7 +14,7 @@ use image::{Rgb, RgbImage};
 use imageproc::drawing::{draw_text_mut, text_size};
 use once_cell::sync::Lazy;
 use rayon::{
-    iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
+    iter::{IntoParallelIterator, ParallelIterator},
     str::ParallelString,
 };
 use regex::Regex;
