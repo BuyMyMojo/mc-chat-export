@@ -1,7 +1,12 @@
-use std::{fs::{self, File}, io::Write, process::exit};
+use std::{
+    fs::{self, File},
+    io::Write,
+    process::exit,
+};
 
 use anyhow::{Error, Result};
 use clap::Parser;
+use csv::Writer;
 use dialoguer::MultiSelect;
 use once_cell::sync::Lazy;
 use rayon::{
@@ -82,21 +87,55 @@ fn main() -> Result<()> {
         .with_prompt("What messages do you want to render?")
         .items(&extracted)
         .interact()?;
-    
+
     match &args.format {
         OutputFormat::Image => todo!(),
-        OutputFormat::CSV => todo!(),
+        OutputFormat::CSV => save_csv_file(&args.output, extracted, selection)?,
         OutputFormat::TXT => save_txt_file(&args.output, extracted, selection)?,
     }
 
     Ok(())
 }
 
-fn save_txt_file(output: &String, extracted: Vec<String>, selection: Vec<usize>) -> Result<(), Error> {
+fn save_txt_file(
+    output: &String,
+    extracted: Vec<String>,
+    selection: Vec<usize>,
+) -> Result<(), Error> {
     let mut out_file = File::create(output)?;
     Ok(for msg in selection {
         out_file.write(extracted[msg].as_bytes())?;
         out_file.write(b"\n")?;
+    })
+}
+
+fn save_csv_file(
+    output: &String,
+    extracted: Vec<String>,
+    selection: Vec<usize>,
+) -> Result<(), Error> {
+    let mut out_file = Writer::from_path(output)?;
+    out_file.write_record(&["date", "time", "msg"])?;
+
+    Ok(for msg in selection {
+        let time: Vec<&str> = EXTRACT_TIME
+            .captures(&extracted[msg])
+            .expect("Unable to extract time")
+            .get(0)
+            .unwrap()
+            .as_str()
+            .strip_prefix("[").expect("Unable to remove time prefix")
+            .strip_suffix("]").expect("Unable to remove time suffix")
+            .split(' ').collect();
+        out_file.write_record(&[
+            time[0],
+            time[1],
+            EXTRACT_MSG
+            .captures(&extracted[msg])
+            .expect("Unable to extract time")
+            .get(0)
+            .unwrap()
+            .as_str()])?;
     })
 }
 
