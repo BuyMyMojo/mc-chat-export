@@ -143,9 +143,7 @@ fn save_image_file(
 
     let mut image = RgbImage::new(image_width, image_height);
 
-    let mut current_line: u32 = 0;
-
-    for msg in &selected {
+    for (current_line, msg) in (0_u32..).zip(selected.iter()) {
         draw_text_mut(
             &mut image,
             Rgb([254u8, 254u8, 254u8]),
@@ -157,7 +155,6 @@ fn save_image_file(
             &font,
             msg,
         );
-        current_line += 1;
     }
 
     image.save(out_path).unwrap();
