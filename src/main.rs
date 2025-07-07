@@ -1,6 +1,7 @@
 use std::{fs, process::exit};
 
 use clap::Parser;
+use dialoguer::MultiSelect;
 use once_cell::sync::Lazy;
 use anyhow::{Error, Result};
 use rayon::{iter::ParallelIterator, str::ParallelString};
@@ -33,7 +34,9 @@ fn main() -> Result<()> {
 
     let filtered_log: Vec<&str> = split_log.filter(|x| is_possible_chat_msg(x)).collect();
 
-    print!("{:#?}", filtered_log);
+    let selection = MultiSelect::new().with_prompt("What messages do you want to render?").items(&filtered_log).interact()?;
+
+    
 
     Ok(())
 }
