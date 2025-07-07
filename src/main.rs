@@ -136,7 +136,7 @@ fn save_image_file(
 
     // let text = extracted[selection[0]].clone();
     let (w, h) = text_size(scale, &font, &longest);
-    println!("Text size: {}x{}", w, h);
+    println!("Text size: {w}x{h}");
 
     let image_width = w + 8;
     let image_height = (h * selected.len() as u32) + (4 * selected.len() as u32) + 4;
@@ -155,12 +155,13 @@ fn save_image_file(
                 .unwrap(),
             scale,
             &font,
-            &msg,
+            msg,
         );
         current_line += 1;
     }
 
-    Ok(image.save(out_path).unwrap())
+    image.save(out_path).unwrap();
+    Ok(())
 }
 
 fn save_txt_file(
@@ -191,7 +192,7 @@ fn save_csv_file(
     selection: Vec<usize>,
 ) -> Result<(), Error> {
     let mut out_file = Writer::from_path(output)?;
-    out_file.write_record(&["date", "time", "msg"])?;
+    out_file.write_record(["date", "time", "msg"])?;
 
     let mut selected: Vec<String> = vec![];
 
@@ -216,7 +217,7 @@ fn save_csv_file(
             .expect("Unable to remove time suffix")
             .split(' ')
             .collect();
-        out_file.write_record(&[
+        out_file.write_record([
             time[0],
             time[1],
             EXTRACT_MSG
@@ -244,5 +245,5 @@ fn is_possible_chat_msg(input: &str) -> bool {
             .unwrap()
     });
 
-    return SERVER_MSG_RE.is_match(input) || CLIENT_MSG_RE.is_match(input);
+    SERVER_MSG_RE.is_match(input) || CLIENT_MSG_RE.is_match(input)
 }
