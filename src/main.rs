@@ -42,9 +42,9 @@ struct Args {
 #[derive(clap::ValueEnum, Debug, Clone, Default)]
 enum OutputFormat {
     Image,
-    CSV,
+    Csv,
     #[default]
-    TXT,
+    Txt,
 }
 
 /// follow up by extracting just the user and the message
@@ -94,8 +94,8 @@ fn main() -> Result<()> {
 
     match &args.format {
         OutputFormat::Image => save_image_file(&args.output, extracted, selection)?,
-        OutputFormat::CSV => save_csv_file(&args.output, extracted, selection)?,
-        OutputFormat::TXT => save_txt_file(&args.output, extracted, selection)?,
+        OutputFormat::Csv => save_csv_file(&args.output, extracted, selection)?,
+        OutputFormat::Txt => save_txt_file(&args.output, extracted, selection)?,
     }
 
     Ok(())
