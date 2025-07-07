@@ -170,13 +170,13 @@ fn save_txt_file(
 
     if selection.is_empty() {
         for msg in extracted {
-            out_file.write(msg.as_bytes())?;
-            out_file.write(b"\n")?;
+            out_file.write_all(msg.as_bytes())?;
+            out_file.write_all(b"\n")?;
         }
     } else {
         for msg in selection {
-            out_file.write(extracted[msg].as_bytes())?;
-            out_file.write(b"\n")?;
+            out_file.write_all(extracted[msg].as_bytes())?;
+            out_file.write_all(b"\n")?;
         }
     }
 
