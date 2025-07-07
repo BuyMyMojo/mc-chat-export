@@ -1,16 +1,20 @@
 use std::{
     fs::{self, File},
     io::Write,
+    path::Path,
     process::exit,
 };
 
+use ab_glyph::{FontRef, PxScale};
 use anyhow::{Error, Result};
 use clap::Parser;
 use csv::Writer;
 use dialoguer::MultiSelect;
+use image::{Rgb, RgbImage};
+use imageproc::drawing::{draw_text_mut, text_size};
 use once_cell::sync::Lazy;
 use rayon::{
-    iter::{IntoParallelIterator, ParallelIterator},
+    iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
     str::ParallelString,
 };
 use regex::Regex;
@@ -89,12 +93,74 @@ fn main() -> Result<()> {
         .interact()?;
 
     match &args.format {
-        OutputFormat::Image => todo!(),
+        OutputFormat::Image => save_image_file(&args.output, extracted, selection)?,
         OutputFormat::CSV => save_csv_file(&args.output, extracted, selection)?,
         OutputFormat::TXT => save_txt_file(&args.output, extracted, selection)?,
     }
 
     Ok(())
+}
+
+fn save_image_file(
+    output: &String,
+    extracted: Vec<String>,
+    selection: Vec<usize>,
+) -> Result<(), Error> {
+    let out_path = Path::new(output);
+
+    let font = FontRef::try_from_slice(include_bytes!("../font/Minecraft-Regular.ttf")).unwrap();
+
+    let height = 40.0;
+    let scale = PxScale {
+        x: height * 2.0,
+        y: height,
+    };
+
+    let mut selected: Vec<String> = vec![];
+
+    if selection.is_empty() {
+        selected = extracted;
+    } else {
+        for x in selection {
+            selected.push(extracted[x].clone());
+        }
+    }
+
+    let mut longest: String = selected.first().expect("selected list is empty?").clone();
+
+    for msg in &selected {
+        if msg.len() > longest.len() {
+            longest = msg.clone();
+        }
+    }
+
+    // let text = extracted[selection[0]].clone();
+    let (w, h) = text_size(scale, &font, &longest);
+    println!("Text size: {}x{}", w, h);
+
+    let image_width = w + 8;
+    let image_height = (h * selected.len() as u32) + (4 * selected.len() as u32) + 4;
+
+    let mut image = RgbImage::new(image_width, image_height);
+
+    let mut current_line: u32 = 0;
+
+    for msg in &selected {
+        draw_text_mut(
+            &mut image,
+            Rgb([254u8, 254u8, 254u8]),
+            4,
+            ((current_line * h) + (4 * current_line))
+                .try_into()
+                .unwrap(),
+            scale,
+            &font,
+            &msg,
+        );
+        current_line += 1;
+    }
+
+    Ok(image.save(out_path).unwrap())
 }
 
 fn save_txt_file(
@@ -103,10 +169,20 @@ fn save_txt_file(
     selection: Vec<usize>,
 ) -> Result<(), Error> {
     let mut out_file = File::create(output)?;
-    Ok(for msg in selection {
-        out_file.write(extracted[msg].as_bytes())?;
-        out_file.write(b"\n")?;
-    })
+
+    if selection.is_empty() {
+        for msg in extracted {
+            out_file.write(msg.as_bytes())?;
+            out_file.write(b"\n")?;
+        }
+    } else {
+        for msg in selection {
+            out_file.write(extracted[msg].as_bytes())?;
+            out_file.write(b"\n")?;
+        }
+    }
+
+    Ok(())
 }
 
 fn save_csv_file(
@@ -117,26 +193,42 @@ fn save_csv_file(
     let mut out_file = Writer::from_path(output)?;
     out_file.write_record(&["date", "time", "msg"])?;
 
-    Ok(for msg in selection {
+    let mut selected: Vec<String> = vec![];
+
+    if selection.is_empty() {
+        selected = extracted;
+    } else {
+        for x in selection {
+            selected.push(extracted[x].clone());
+        }
+    }
+
+    for msg in selected {
         let time: Vec<&str> = EXTRACT_TIME
-            .captures(&extracted[msg])
+            .captures(&msg)
             .expect("Unable to extract time")
             .get(0)
             .unwrap()
             .as_str()
-            .strip_prefix("[").expect("Unable to remove time prefix")
-            .strip_suffix("]").expect("Unable to remove time suffix")
-            .split(' ').collect();
+            .strip_prefix("[")
+            .expect("Unable to remove time prefix")
+            .strip_suffix("]")
+            .expect("Unable to remove time suffix")
+            .split(' ')
+            .collect();
         out_file.write_record(&[
             time[0],
             time[1],
             EXTRACT_MSG
-            .captures(&extracted[msg])
-            .expect("Unable to extract time")
-            .get(0)
-            .unwrap()
-            .as_str()])?;
-    })
+                .captures(&msg)
+                .expect("Unable to extract time")
+                .get(0)
+                .unwrap()
+                .as_str(),
+        ])?;
+    }
+
+    Ok(())
 }
 
 fn is_possible_chat_msg(input: &str) -> bool {
