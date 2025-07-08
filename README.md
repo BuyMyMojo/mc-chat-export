@@ -7,8 +7,10 @@ A simple tool for grabbing chat messages from Minecraft game/server logs and exp
 
 ## Repository
 
-**Main Repository**: [https://git.aria.coffee/aria/mc-chat-export](https://git.aria.coffee/aria/mc-chat-export)  
-**Mirror (GitHub)**: [https://github.com/BuyMyMojo/mc-chat-export](https://github.com/BuyMyMojo/mc-chat-export)
+- **Main Repository**: [https://git.aria.coffee/aria/mc-chat-export](https://git.aria.coffee/aria/mc-chat-export)  
+- **Mirror (witchcraft.systems)**: [https://git.witchcraft.systems/aria/mc-chat-export](https://git.witchcraft.systems/aria/mc-chat-export)
+- **Mirror (being.pet)**: [https://git.being.pet/aria/mc-chat-export](https://git.being.pet/aria/mc-chat-export)
+- **Mirror (GitHub)**: [https://github.com/BuyMyMojo/mc-chat-export](https://github.com/BuyMyMojo/mc-chat-export)
 
 The main development happens on the personal Forgejo instance. The GitHub mirror also accepts pull requests and bug reports for convenience.
 
