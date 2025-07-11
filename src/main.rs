@@ -294,11 +294,17 @@ mod tests {
     }
     #[test]
     fn extract_chat_message_client_log() {
-        assert_eq!("<BuyMyMojo@MakeoutPoint> tehe", &extract_message(TEST_CLIENT_LOG_MSG));
+        assert_eq!(
+            "<BuyMyMojo@MakeoutPoint> tehe",
+            &extract_message(TEST_CLIENT_LOG_MSG)
+        );
     }
     #[test]
     fn extract_chat_message_prism_log() {
-        assert_eq!("<smol.systems-LeNooby_09> ;3", &extract_message(TEST_PRISM_MSG));
+        assert_eq!(
+            "<smol.systems-LeNooby_09> ;3",
+            &extract_message(TEST_PRISM_MSG)
+        );
     }
 
     #[test]
