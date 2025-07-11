@@ -1,0 +1,16 @@
+on: [push]
+jobs:
+  lint-n-test:
+    # Run on the 9950x that Aria has access to :3
+    runs-on: azuki-new
+    container:
+      image: rust
+    steps:
+      # nodejs is required for the checkout action
+      - run: curl -sL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
+      - uses: actions/checkout@v4
+      - run: rustup component add rustfmt clippy
+      - run: cargo fmt -- --check
+      - run: cargo clippy -- -D warnings
+      - run: cargo check
+      - run: cargo test
