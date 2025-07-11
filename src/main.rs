@@ -67,7 +67,7 @@ fn main() -> Result<()> {
         .map(|x| {
             format!(
                 "{} {}",
-                extract_date_time(&x.to_string()).first().unwrap(),
+                extract_date_time(x).first().unwrap(),
                 extract_message(x)
             )
         })
