@@ -254,6 +254,93 @@ fn is_possible_chat_msg(input: &str) -> bool {
         Lazy::new(|| Regex::new(r".*?: \[CHAT\] .*").unwrap());
 
     SERVER_MSG_RE.is_match(input)
-|| CLIENT_PRISM_MSG_RE.is_match(input)
-|| CLIENT_LOG_MSG_RE.is_match(input)
+        || CLIENT_PRISM_MSG_RE.is_match(input)
+        || CLIENT_LOG_MSG_RE.is_match(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const TEST_SERVER_MSG: &str = "[05Jul2025 12:41:12.295] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: <🐈 Vftdan> :3";
+    const TEST_CLIENT_LOG_MSG: &str = "[11Jul2025 20:30:20.286] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [CHAT] <BuyMyMojo@MakeoutPoint> tehe";
+    const TEST_PRISM_MSG: &str = "[16:53:50] [Render thread/INFO] [minecraft/ChatComponent]: [CHAT] <smol.systems-LeNooby_09> ;3";
+
+    const RANDOM_LOG_LINES: [&str; 5] = [
+        "[05Jul2025 13:08:11.886] [VoiceChatPacketProcessingThread/INFO] [voicechat/]: [voicechat] Player 399aedb6-a257-49d1-930b-af62fc328ae7 timed out",
+        "[05Jul2025 13:09:19.890] [Server thread/INFO] [me.ichun.mods.serverpause.common.core.MinecraftServerMethods/]: Saving and pausing game...",
+        "[05Jul2025 12:02:58.057] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: alto joined the game",
+        "java.lang.NullPointerException: Cannot invoke \"net.minecraft.world.Container.getContainerSize()\" because the return value of \"net.neoforged.neoforge.items.wrapper.InvWrapper.getInv()\" is null",
+        "[05Jul2025 10:31:36.112] [Server thread/INFO] [owo/]: Receiving client config",
+    ];
+
+    #[test]
+    fn detect_server_chat_messages() {
+        assert!(is_possible_chat_msg(TEST_SERVER_MSG));
+    }
+
+    #[test]
+    fn detect_prism_chat_messages() {
+        assert!(is_possible_chat_msg(TEST_PRISM_MSG));
+    }
+
+    #[test]
+    fn detect_client_log_chat_messages() {
+        assert!(is_possible_chat_msg(TEST_CLIENT_LOG_MSG));
+    }
+
+    #[test]
+    fn extract_chat_message_server() {
+        assert_eq!("<🐈 Vftdan> :3", &extract_message(TEST_SERVER_MSG));
+    }
+    #[test]
+    fn extract_chat_message_client_log() {
+        assert_eq!("<BuyMyMojo@MakeoutPoint> tehe", &extract_message(TEST_CLIENT_LOG_MSG));
+    }
+    #[test]
+    fn extract_chat_message_prism_log() {
+        assert_eq!("<smol.systems-LeNooby_09> ;3", &extract_message(TEST_PRISM_MSG));
+    }
+
+    #[test]
+    fn extract_datetime_server_messages() {
+        let msg_string = TEST_SERVER_MSG.to_string();
+        let datetime: Vec<&str> = extract_date_time(&msg_string);
+        println!("server datetime: {:?}", datetime);
+
+        let correct_datetime: Vec<&str> = vec![&"05Jul2025", &"12:41:12.295"];
+        assert_eq!(datetime, correct_datetime);
+    }
+
+    #[test]
+    fn extract_datetime_client_messages() {
+        let msg_string = TEST_CLIENT_LOG_MSG.to_string();
+        let datetime: Vec<&str> = extract_date_time(&msg_string);
+        println!("server datetime: {:?}", datetime);
+
+        let correct_datetime: Vec<&str> = vec![&"11Jul2025", &"20:30:20.286"];
+        assert_eq!(datetime, correct_datetime);
+    }
+
+    #[test]
+    fn extract_datetime_prism_messages() {
+        let msg_string = TEST_PRISM_MSG.to_string();
+        let datetime: Vec<&str> = extract_date_time(&msg_string);
+        println!("prism datetime: {:?}", datetime);
+
+        let correct_datetime: Vec<&str> = vec![&"16:53:50"];
+        assert_eq!(datetime, correct_datetime);
+    }
+
+    #[test]
+    fn ignore_random_log_lines() {
+        let mut is_msg: bool = false;
+
+        for line in RANDOM_LOG_LINES {
+            if is_possible_chat_msg(line) {
+                is_msg = true;
+            }
+        }
+
+        assert!(!is_msg);
+    }
 }
