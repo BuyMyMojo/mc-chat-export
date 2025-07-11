@@ -1,4 +1,4 @@
-on: [push]
+on: [push, workflow_dispatch]
 jobs:
   lint-n-test:
     # Run on the 9950x that Aria has access to :3
