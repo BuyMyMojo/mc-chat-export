@@ -47,10 +47,6 @@ enum OutputFormat {
     Txt,
 }
 
-/// follow up by extracting just the user and the message
-static EXTRACT_MSG: Lazy<Regex> = Lazy::new(|| Regex::new(r"<.*> .*").unwrap());
-static EXTRACT_TIME: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\[.*?\]").unwrap());
-
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -71,18 +67,8 @@ fn main() -> Result<()> {
         .map(|x| {
             format!(
                 "{} {}",
-                EXTRACT_TIME
-                    .captures(x)
-                    .expect("Unable to extract time")
-                    .get(0)
-                    .unwrap()
-                    .as_str(),
-                EXTRACT_MSG
-                    .captures(x)
-                    .expect("Unable to extract message")
-                    .get(0)
-                    .unwrap()
-                    .as_str()
+                extract_date_time(&x.to_string()).get(0).unwrap(),
+                extract_message(x)
             )
         })
         .collect();
@@ -202,31 +188,48 @@ fn save_csv_file(
     }
 
     for msg in selected {
-        let time: Vec<&str> = EXTRACT_TIME
-            .captures(&msg)
-            .expect("Unable to extract time")
-            .get(0)
-            .unwrap()
-            .as_str()
-            .strip_prefix("[")
-            .expect("Unable to remove time prefix")
-            .strip_suffix("]")
-            .expect("Unable to remove time suffix")
-            .split(' ')
-            .collect();
-        out_file.write_record([
-            time[0],
-            time[1],
-            EXTRACT_MSG
-                .captures(&msg)
-                .expect("Unable to extract time")
-                .get(0)
-                .unwrap()
-                .as_str(),
-        ])?;
+        let mut time: Vec<&str> = extract_date_time(&msg);
+
+        // if there is only 1 entry in the vec then it has to be a client time so we can just add a pointless entry for the csv
+        if time.len() == 1 {
+            time.insert(0, "Null");
+        }
+
+        out_file.write_record([time[0], time[1], &extract_message(&msg)])?;
     }
 
     Ok(())
+}
+
+fn extract_message(msg: &str) -> String {
+    /// follow up by extracting just the user and the message
+    static EXTRACT_MSG: Lazy<Regex> = Lazy::new(|| Regex::new(r"<.*> .*").unwrap());
+
+    EXTRACT_MSG
+        .captures(&msg)
+        .expect("Unable to extract time")
+        .get(0)
+        .unwrap()
+        .as_str()
+        .to_string()
+}
+
+fn extract_date_time(msg: &String) -> Vec<&str> {
+    static EXTRACT_TIME: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\[.*?\]").unwrap());
+
+    let time: Vec<&str> = EXTRACT_TIME
+        .captures(msg)
+        .expect("Unable to extract time")
+        .get(0)
+        .unwrap()
+        .as_str()
+        .strip_prefix("[")
+        .expect("Unable to remove time prefix")
+        .strip_suffix("]")
+        .expect("Unable to remove time suffix")
+        .split(' ')
+        .collect();
+    time
 }
 
 fn is_possible_chat_msg(input: &str) -> bool {
@@ -247,11 +250,10 @@ fn is_possible_chat_msg(input: &str) -> bool {
     });
 
     // This is here just in case I need to get a chat message from a strange place
-    static _CLIENT_CATCHALL_MSG_RE: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r".*?: \[CHAT\] .*")
-            .unwrap()
-    });
-    
+    static _CLIENT_CATCHALL_MSG_RE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r".*?: \[CHAT\] .*").unwrap());
 
-    SERVER_MSG_RE.is_match(input) || CLIENT_PRISM_MSG_RE.is_match(input) || CLIENT_LOG_MSG_RE.is_match(input)
+    SERVER_MSG_RE.is_match(input)
+|| CLIENT_PRISM_MSG_RE.is_match(input)
+|| CLIENT_LOG_MSG_RE.is_match(input)
 }
