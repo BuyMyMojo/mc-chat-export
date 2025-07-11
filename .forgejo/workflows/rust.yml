@@ -7,10 +7,9 @@ jobs:
       image: rust
     steps:
       # nodejs is required for the checkout action
-      - run: curl -sL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs jq
+      - run: curl -sL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
       - uses: actions/checkout@v4
       - run: rustup component add rustfmt clippy
-      - uses: https://github.com/Leafwing-Studios/cargo-cache@v2
       - run: cargo fmt -- --check
         continue-on-error: true
       - run: cargo clippy -- -D warnings
