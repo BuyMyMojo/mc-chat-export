@@ -237,10 +237,21 @@ fn is_possible_chat_msg(input: &str) -> bool {
         )
         .unwrap()
     });
-    static CLIENT_MSG_RE: Lazy<Regex> = Lazy::new(|| {
+    static CLIENT_PRISM_MSG_RE: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r"\[.*\] \[Render thread\/INFO\] \[minecraft\/ChatComponent\]: \[CHAT\] <.*>*")
             .unwrap()
     });
+    static CLIENT_LOG_MSG_RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"\[.*\] \[Render thread\/INFO\] \[net.minecraft.client.gui.components.ChatComponent\/\]: \[CHAT\] <.*>*")
+            .unwrap()
+    });
 
-    SERVER_MSG_RE.is_match(input) || CLIENT_MSG_RE.is_match(input)
+    // This is here just in case I need to get a chat message from a strange place
+    static _CLIENT_CATCHALL_MSG_RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r".*?: \[CHAT\] .*")
+            .unwrap()
+    });
+    
+
+    SERVER_MSG_RE.is_match(input) || CLIENT_PRISM_MSG_RE.is_match(input) || CLIENT_LOG_MSG_RE.is_match(input)
 }
