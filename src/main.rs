@@ -67,7 +67,7 @@ fn main() -> Result<()> {
         .map(|x| {
             format!(
                 "{} {}",
-                extract_date_time(&x.to_string()).get(0).unwrap(),
+                extract_date_time(&x.to_string()).first().unwrap(),
                 extract_message(x)
             )
         })
@@ -206,7 +206,7 @@ fn extract_message(msg: &str) -> String {
     static EXTRACT_MSG: Lazy<Regex> = Lazy::new(|| Regex::new(r"<.*> .*").unwrap());
 
     EXTRACT_MSG
-        .captures(&msg)
+        .captures(msg)
         .expect("Unable to extract time")
         .get(0)
         .unwrap()
@@ -214,7 +214,7 @@ fn extract_message(msg: &str) -> String {
         .to_string()
 }
 
-fn extract_date_time(msg: &String) -> Vec<&str> {
+fn extract_date_time(msg: &str) -> Vec<&str> {
     static EXTRACT_TIME: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\[.*?\]").unwrap());
 
     let time: Vec<&str> = EXTRACT_TIME
